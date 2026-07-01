@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Omer | קהילה</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060a10;
+    --bg2:#0a1320;
+    --panel:#0d1b2a;
+    --line:#16293d;
+    --cyan:#3ee8ff;
+    --cyan2:#4cc9f0;
+    --blue:#2a6f97;
+    --ink:#eaf6fb;
+    --muted:#7d9bb0;
+    --glow:0 0 18px rgba(62,232,255,.5);
+    --red:#ff4d6d;
+    --green:#4dff9e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--ink);font-family:'Rubik',sans-serif;height:100svh;overflow:hidden;}
+
+  /* ===== BG ===== */
+  .bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(ellipse 900px 600px at 80% -10%,rgba(62,232,255,.08),transparent 60%),
+    radial-gradient(ellipse 700px 500px at 10% 110%,rgba(42,111,151,.12),transparent 60%);}
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.12;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:42px 42px;}
+
+  /* ===== LOGIN ===== */
+  #loginScreen{
+    position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:var(--bg);
+  }
+  .login-box{
+    background:rgba(13,27,42,.9);border:1px solid var(--line);border-radius:12px;
+    padding:52px 48px;width:min(420px,90vw);text-align:center;
+    box-shadow:0 0 60px rgba(62,232,255,.08);
+  }
+  .login-logo{font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;margin-bottom:6px;}
+  .login-logo span{color:var(--cyan);}
+  .login-sub{color:var(--muted);font-size:14px;margin-bottom:36px;}
+  .login-box label{display:block;text-align:right;font-size:13px;color:var(--muted);margin-bottom:6px;}
+  .login-box input{
+    width:100%;background:rgba(6,10,16,.7);border:1px solid var(--line);border-radius:6px;
+    padding:13px 16px;color:var(--ink);font-family:'Rubik',sans-serif;font-size:14px;
+    outline:none;transition:border-color .25s,box-shadow .25s;margin-bottom:16px;
+  }
+  .login-box input:focus{border-color:var(--cyan2);box-shadow:0 0 0 3px rgba(62,232,255,.1);}
+  .login-box input::placeholder{color:var(--muted);}
+  .btn-login{
+    width:100%;font-family:'Orbitron',sans-serif;font-weight:700;font-size:14px;
+    background:linear-gradient(135deg,var(--cyan),var(--blue));color:#031018;
+    padding:14px;border-radius:6px;border:none;cursor:pointer;
+    box-shadow:0 0 24px rgba(62,232,255,.3);transition:transform .2s,box-shadow .2s;
+  }
+  .btn-login:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(62,232,255,.5);}
+  #loginError{color:var(--red);font-size:13px;margin-top:12px;display:none;}
+
+  /* ===== APP LAYOUT ===== */
+  #app{display:none;height:100svh;position:relative;z-index:2;}
+  .layout{display:grid;grid-template-columns:260px 1fr;grid-template-rows:64px 1fr;height:100svh;}
+
+  /* ===== HEADER ===== */
+  .topbar{
+    grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;background:rgba(6,10,16,.8);border-bottom:1px solid var(--line);
+    backdrop-filter:blur(10px);
+  }
+  .topbar-brand{font-family:'Orbitron',sans-serif;font-weight:700;font-size:17px;}
+  .topbar-brand span{color:var(--cyan);}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+  .user-badge{
+    display:flex;align-items:center;gap:10px;background:rgba(13,27,42,.6);
+    border:1px solid var(--line);border-radius:50px;padding:6px 14px 6px 8px;
+  }
+  .avatar{
+    width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--blue));
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#031018;
+  }
+  .user-name{font-size:13px;color:var(--ink);}
+  .btn-logout{
+    font-size:12px;color:var(--muted);background:none;border:1px solid var(--line);
+    border-radius:4px;padding:5px 12px;cursor:pointer;font-family:'Rubik',sans-serif;
+    transition:color .2s,border-color .2s;
+  }
+  .btn-logout:hover{color:var(--red);border-color:var(--red);}
+
+  /* ===== SIDEBAR ===== */
+  .sidebar{
+    background:rgba(10,19,32,.7);border-left:1px solid var(--line);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .sidebar-section{padding:20px 16px 8px;font-family:'Orbitron',sans-serif;font-size:10px;
+    color:var(--muted);letter-spacing:2px;}
+  .channel-item{
+    display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;
+    border-radius:6px;margin:2px 8px;transition:background .2s,color .2s;font-size:14px;color:var(--muted);
+  }
+  .channel-item:hover{background:rgba(62,232,255,.06);color:var(--ink);}
+  .channel-item.active{background:rgba(62,232,255,.1);color:var(--cyan);}
+  .channel-icon{font-size:16px;}
+  .sidebar-divider{height:1px;background:var(--line);margin:12px 16px;}
+
+  /* members list */
+  .members-list{flex:1;overflow-y:auto;padding:8px;}
+  .member-item{
+    display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;
+    font-size:13px;color:var(--muted);
+  }
+  .member-avatar{
+    width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--blue));
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#031018;
+    flex-shrink:0;
+  }
+  .member-name{flex:1;}
+  .online-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+
+  /* ===== MAIN CONTENT ===== */
+  .main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);}
+
+  /* channel header */
+  .channel-header{
+    padding:16px 24px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:12px;background:rgba(10,19,32,.5);
+    flex-shrink:0;
+  }
+  .channel-header h2{font-family:'Orbitron',sans-serif;font-size:15px;}
+  .channel-header .desc{color:var(--muted);font-size:13px;}
+
+  /* messages */
+  .messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px;}
+  .messages::-webkit-scrollbar{width:4px;}
+  .messages::-webkit-scrollbar-track{background:transparent;}
+  .messages::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  .msg{display:flex;gap:12px;align-items:flex-start;}
+  .msg-avatar{
+    width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--blue));
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+    color:#031018;flex-shrink:0;
+  }
+  .msg-body{}
+  .msg-header{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;}
+  .msg-name{font-size:14px;font-weight:600;color:var(--cyan);}
+  .msg-name.admin{color:#ffd700;}
+  .msg-time{font-size:11px;color:var(--muted);}
+  .msg-text{font-size:14px;line-height:1.6;color:var(--ink);}
+
+  .msg.own .msg-name{color:var(--cyan2);}
+
+  /* date divider */
+  .date-divider{
+    display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:8px 0;
+  }
+  .date-divider::before,.date-divider::after{content:'';flex:1;height:1px;background:var(--line);}
+
+  /* ===== INPUT ===== */
+  .chat-input-wrap{
+    padding:16px 24px;border-top:1px solid var(--line);background:rgba(10,19,32,.5);flex-shrink:0;
+  }
+  .chat-input-box{
+    display:flex;align-items:center;gap:12px;background:rgba(6,10,16,.6);
+    border:1px solid var(--line);border-radius:8px;padding:12px 16px;
+    transition:border-color .25s,box-shadow .25s;
+  }
+  .chat-input-box:focus-within{border-color:var(--cyan2);box-shadow:0 0 0 3px rgba(62,232,255,.08);}
+  .chat-input{
+    flex:1;background:none;border:none;outline:none;color:var(--ink);
+    font-family:'Rubik',sans-serif;font-size:14px;
+  }
+  .chat-input::placeholder{color:var(--muted);}
+  .send-btn{
+    background:linear-gradient(135deg,var(--cyan),var(--blue));border:none;border-radius:6px;
+    padding:8px 16px;color:#031018;font-weight:700;font-size:13px;cursor:pointer;
+    font-family:'Orbitron',sans-serif;transition:transform .2s,box-shadow .2s;white-space:nowrap;
+  }
+  .send-btn:hover{transform:translateY(-1px);box-shadow:var(--glow);}
+
+  /* welcome msg */
+  .welcome-banner{
+    background:rgba(62,232,255,.05);border:1px solid rgba(62,232,255,.15);
+    border-radius:8px;padding:20px 24px;margin-bottom:8px;
+  }
+  .welcome-banner h3{font-family:'Orbitron',sans-serif;font-size:16px;color:var(--cyan);margin-bottom:6px;}
+  .welcome-banner p{color:var(--muted);font-size:14px;line-height:1.6;}
+
+  /* loading */
+  .loading{color:var(--muted);font-size:13px;text-align:center;padding:20px;}
+
+  @media(max-width:700px){
+    .layout{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fixed"></div>
+<div class="bg-grid"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">CODE <span>OMER</span></div>
+    <div class="login-sub">פורטל הקהילה הפנימי 🔒</div>
+    <label>אימייל</label>
+    <input type="email" id="loginEmail" placeholder="your@email.com">
+    <label>סיסמה</label>
+    <input type="password" id="loginPass" placeholder="••••••••">
+    <button class="btn-login" onclick="doLogin()">כניסה לקהילה</button>
+    <div id="loginError">❌ אימייל או סיסמה שגויים</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="layout">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-brand">CODE <span>OMER</span> | קהילה</div>
+      <div class="topbar-right">
+        <div class="user-badge">
+          <div class="avatar" id="topAvatar">?</div>
+          <span class="user-name" id="topName">טוען...</span>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">יציאה</button>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">ערוצים</div>
+      <div class="channel-item active" onclick="switchChannel('general')">
+        <span class="channel-icon">#</span> כללי
+      </div>
+      <div class="channel-item" onclick="switchChannel('brawl')">
+        <span class="channel-icon">#</span> Brawl Stars
+      </div>
+      <div class="channel-item" onclick="switchChannel('ideas')">
+        <span class="channel-icon">#</span> רעיונות לסרטונים
+      </div>
+      <div class="channel-item" onclick="switchChannel('updates')">
+        <span class="channel-icon">📢</span> עדכונים
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">חברי הצוות</div>
+      <div class="members-list" id="membersList">
+        <div class="loading">טוען חברים...</div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="channel-header">
+        <span style="color:var(--cyan);font-size:18px;">#</span>
+        <div>
+          <h2 id="channelName">כללי</h2>
+          <div class="desc" id="channelDesc">ברוכים הבאים לקהילת Code Omer!</div>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="loading">טוען הודעות...</div>
+      </div>
+
+      <div class="chat-input-wrap">
+        <div class="chat-input-box">
+          <input class="chat-input" id="msgInput" placeholder="כתוב הודעה..." onkeydown="if(event.key==='Enter')sendMsg()">
+          <button class="send-btn" onclick="sendMsg()">שלח ▶</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, push, onValue, serverTimestamp, set, onDisconnect, get }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBBTpiRjji34y4Fop9-u7UXxc_qy_y7TTg",
+    authDomain: "codeomer-communit.firebaseapp.com",
+    databaseURL: "https://new1-58b05-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "codeomer-communit",
+    storageBucket: "codeomer-communit.firebasestorage.app",
+    messagingSenderId: "484964106609",
+    appId: "1:484964106609:web:c55762f01c66b0c83f36d0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let currentUser = null;
+  let currentChannel = 'general';
+  let msgUnsubscribe = null;
+
+  const channelInfo = {
+    general:  { name:'כללי',               desc:'ברוכים הבאים לקהילת Code Omer!' },
+    brawl:    { name:'Brawl Stars',        desc:'הכל על המשחק — טיפים, עדכונים ועוד' },
+    ideas:    { name:'רעיונות לסרטונים',   desc:'שתפו רעיונות לתוכן חדש' },
+    updates:  { name:'עדכונים',            desc:'הודעות רשמיות מגיא ועומר' },
+  };
+
+  // ===== AUTH =====
+  window.doLogin = async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPass').value;
+    const err   = document.getElementById('loginError');
+    err.style.display = 'none';
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch(e) {
+      err.style.display = 'block';
+    }
+  };
+
+  window.doLogout = () => signOut(auth);
+
+  onAuthStateChanged(auth, async user => {
+    if (user) {
+      currentUser = user;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+
+      // get display name from DB or use email prefix
+      const snap = await get(ref(db, `users/${user.uid}/displayName`));
+      const displayName = snap.exists() ? snap.val() : user.email.split('@')[0];
+      currentUser.displayName = displayName;
+
+      document.getElementById('topName').textContent = displayName;
+      document.getElementById('topAvatar').textContent = displayName[0].toUpperCase();
+
+      // presence
+      const presenceRef = ref(db, `presence/${user.uid}`);
+      set(presenceRef, { name: displayName, online: true, uid: user.uid });
+      onDisconnect(presenceRef).set({ name: displayName, online: false, uid: user.uid });
+
+      loadMembers();
+      switchChannel('general');
+    } else {
+      currentUser = null;
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+    }
+  });
+
+  // ===== MEMBERS =====
+  function loadMembers() {
+    onValue(ref(db, 'presence'), snap => {
+      const list = document.getElementById('membersList');
+      list.innerHTML = '';
+      if (!snap.exists()) { list.innerHTML = '<div class="loading">אין חברים</div>'; return; }
+      snap.forEach(child => {
+        const m = child.val();
+        const div = document.createElement('div');
+        div.className = 'member-item';
+        div.innerHTML = `
+          <div class="member-avatar">${m.name ? m.name[0].toUpperCase() : '?'}</div>
+          <span class="member-name">${m.name || 'משתמש'}</span>
+          ${m.online ? '<div class="online-dot"></div>' : ''}
+        `;
+        list.appendChild(div);
+      });
+    });
+  }
+
+  // ===== CHANNELS =====
+  window.switchChannel = (ch) => {
+    currentChannel = ch;
+    document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.channel-item').forEach(el => {
+      if (el.onclick?.toString().includes(`'${ch}'`)) el.classList.add('active');
+    });
+    const info = channelInfo[ch];
+    document.getElementById('channelName').textContent = info.name;
+    document.getElementById('channelDesc').textContent = info.desc;
+    loadMessages(ch);
+  };
+
+  // ===== MESSAGES =====
+  function loadMessages(ch) {
+    if (msgUnsubscribe) msgUnsubscribe();
+    const messagesEl = document.getElementById('messages');
+    messagesEl.innerHTML = '<div class="loading">טוען הודעות...</div>';
+
+    msgUnsubscribe = onValue(ref(db, `channels/${ch}/messages`), snap => {
+      messagesEl.innerHTML = '';
+
+      // welcome banner
+      const banner = document.createElement('div');
+      banner.className = 'welcome-banner';
+      banner.innerHTML = `<h3># ${channelInfo[ch].name}</h3><p>${channelInfo[ch].desc}</p>`;
+      messagesEl.appendChild(banner);
+
+      if (!snap.exists()) {
+        const empty = document.createElement('div');
+        empty.className = 'loading';
+        empty.textContent = 'עדיין אין הודעות — היה הראשון! 👋';
+        messagesEl.appendChild(empty);
+      } else {
+        let lastDate = '';
+        snap.forEach(child => {
+          const msg = child.val();
+          const date = msg.timestamp ? new Date(msg.timestamp).toLocaleDateString('he-IL') : '';
+          if (date !== lastDate) {
+            const div = document.createElement('div');
+            div.className = 'date-divider';
+            div.textContent = date;
+            messagesEl.appendChild(div);
+            lastDate = date;
+          }
+          messagesEl.appendChild(createMsgEl(msg));
+        });
+      }
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+  }
+
+  function createMsgEl(msg) {
+    const isOwn = msg.uid === currentUser?.uid;
+    const isAdmin = msg.uid === 'GUY' || msg.isAdmin;
+    const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'}) : '';
+    const div = document.createElement('div');
+    div.className = 'msg' + (isOwn ? ' own' : '');
+    div.innerHTML = `
+      <div class="msg-avatar">${msg.name ? msg.name[0].toUpperCase() : '?'}</div>
+      <div class="msg-body">
+        <div class="msg-header">
+          <span class="msg-name ${isAdmin ? 'admin' : ''}">${msg.name || 'משתמש'}${isAdmin ? ' 👑' : ''}</span>
+          <span class="msg-time">${time}</span>
+        </div>
+        <div class="msg-text">${escapeHtml(msg.text)}</div>
+      </div>
+    `;
+    return div;
+  }
+
+  window.sendMsg = async () => {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text || !currentUser) return;
+    input.value = '';
+    await push(ref(db, `channels/${currentChannel}/messages`), {
+      text,
+      name: currentUser.displayName,
+      uid: currentUser.uid,
+      timestamp: Date.now(),
+    });
+  };
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>
