@@ -189,7 +189,11 @@
   .welcome-banner h3{font-family:'Orbitron',sans-serif;font-size:16px;color:var(--cyan);margin-bottom:6px;}
   .welcome-banner p{color:var(--muted);font-size:14px;line-height:1.6;}
 
-  /* loading */
+  .chat-link{ color:var(--cyan); text-decoration:underline; word-break:break-all; }
+  .chat-link:hover{ color:var(--cyan2); }
+  .chat-img{ max-width:320px; max-height:260px; border-radius:8px; margin-top:8px; cursor:pointer; display:block; border:1px solid var(--line); }
+  .yt-embed{ margin-top:10px; }
+  .yt-embed iframe{ width:320px; height:180px; border-radius:8px; border:1px solid var(--line); }
   .loading{color:var(--muted);font-size:13px;text-align:center;padding:20px;}
 
   @media(max-width:700px){
@@ -445,7 +449,7 @@
           <span class="msg-name ${isAdmin ? 'admin' : ''}">${msg.name || 'משתמש'}${isAdmin ? ' 👑' : ''}</span>
           <span class="msg-time">${time}</span>
         </div>
-        <div class="msg-text">${escapeHtml(msg.text)}</div>
+        <div class="msg-text">${renderText(msg.text)}</div>
       </div>
     `;
     return div;
@@ -466,6 +470,36 @@
 
   function escapeHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderText(text) {
+    const escaped = escapeHtml(text);
+    // תמונות
+    const imageExt = /https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|bmp)(\?\S*)?/gi;
+    // יוטיוב
+    const youtubeReg = /https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
+    // קישורים כלליים
+    const linkReg = /https?:\/\/[^\s<>"]+/g;
+
+    let html = escaped;
+
+    // יוטיוב → embed
+    html = html.replace(youtubeReg, (match, p1, p2, id) => {
+      return `<div class="yt-embed"><iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe></div>`;
+    });
+
+    // תמונות → img
+    html = html.replace(imageExt, (match) => {
+      return `<img class="chat-img" src="${match}" alt="תמונה" onclick="window.open('${match}','_blank')">`;
+    });
+
+    // קישורים כלליים → a
+    html = html.replace(linkReg, (match) => {
+      if (match.includes('<iframe') || match.includes('<img')) return match;
+      return `<a href="${match}" target="_blank" rel="noopener" class="chat-link">${match}</a>`;
+    });
+
+    return html;
   }
 </script>
 </body>
