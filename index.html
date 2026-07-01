@@ -301,6 +301,11 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
+  const DISPLAY_NAMES = {
+    'O8vSrRbUbCfYTDj9ZpSsbbWcxi62': 'guy✔️',
+    'Y9XCxcAWbrTsiokO0M6KuknvVBo1': 'codeomer✔️',
+  };
+
   let currentUser = null;
   let currentChannel = 'general';
   let msgUnsubscribe = null;
@@ -335,7 +340,7 @@
 
       // get display name from DB or use email prefix
       const snap = await get(ref(db, `users/${user.uid}/displayName`));
-      const displayName = snap.exists() ? snap.val() : user.email.split('@')[0];
+      const displayName = DISPLAY_NAMES[user.uid] || (snap.exists() ? snap.val() : user.email.split('@')[0]);
       currentUser.displayName = displayName;
 
       document.getElementById('topName').textContent = displayName;
